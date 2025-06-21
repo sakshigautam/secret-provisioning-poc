@@ -1,0 +1,6 @@
+tlsSecret:
+  name: dremio-tls
+  namespace: default
+  data:
+    tls.crt: LS0t...
+    tls.key: LS0t...
