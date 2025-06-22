@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m
-  path: clusters/dev/secret-provisioning
+  path: ./dev/secret-provisioning
   prune: true
   sourceRef:
     kind: GitRepository
