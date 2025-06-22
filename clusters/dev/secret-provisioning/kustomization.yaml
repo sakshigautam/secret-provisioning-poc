@@ -5,12 +5,10 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m
-  path: ./clusters/dev/secret-provisioning
+  path: ./clusters/dev/secret-provisioning  # 👈 path from root of repo
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
     namespace: flux-system
   targetNamespace: default
-  timeout: 2m
-  wait: true
