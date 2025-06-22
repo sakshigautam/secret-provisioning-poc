@@ -1,22 +1,14 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
 metadata:
-  name: tls-secret
+  name: secret-provisioning
   namespace: flux-system
 spec:
   interval: 5m
-  releaseName: tls-secret
-  chart:
-    spec:
-      chart: ./charts/tls-secret
-      sourceRef:
-        kind: GitRepository
-        name: flux-system
-        namespace: flux-system
-  values:
-    tlsSecret:
-      name: dremio-tls
-      namespace: default
-  resources:
-    - helmrelease-tls-secret.yaml
-
+  path: ./clusters/dev/secret-provisioning
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: default
