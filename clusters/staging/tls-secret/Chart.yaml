@@ -1,4 +1,0 @@
-apiVersion: v2
-name: tls-secret
-description: A Helm chart for installing TLS secrets
-version: 0.1.0
