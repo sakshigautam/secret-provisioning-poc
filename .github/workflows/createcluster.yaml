@@ -1,0 +1,97 @@
+name: Create EKS Cluster and Bootstrap Flux
+
+on: workflow_dispatch
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: default-cluster
+  NODE_TYPE: t3.medium
+  NODE_COUNT: 1
+  K8S_VERSION: "1.28"
+  FLUX_REPO_OWNER: "sakshigautam"         # Replace with your GitHub org or username
+  FLUX_REPO_NAME: "secret-provisioning-poc"           # Replace with your Flux Git repo name
+  FLUX_REPO_BRANCH: main
+  FLUX_MANIFEST_PATH: ./clusters/dev # Path in repo for Flux manifests
+
+jobs:
+  create-eks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Install Flux CLI
+        run: |
+          curl -s https://fluxcd.io/install.sh | sudo bash
+
+      - name: Check if EKS cluster exists
+        id: check_cluster
+        run: |
+          if aws eks describe-cluster --name $CLUSTER_NAME --region $AWS_REGION > /dev/null 2>&1; then
+            echo "cluster_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "cluster_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create EKS Cluster (if not exists)
+        if: steps.check_cluster.outputs.cluster_exists == 'false'
+        run: |
+          eksctl create cluster \
+            --name $CLUSTER_NAME \
+            --version $K8S_VERSION \
+            --region $AWS_REGION \
+            --nodegroup-name standard-workers \
+            --node-type $NODE_TYPE \
+            --nodes $NODE_COUNT \
+            --nodes-min 1 \
+            --nodes-max 1 \
+            --managed
+
+      - name: Update kubeconfig for cluster
+        run: |
+          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      - name: Check if namespace exists
+        id: check_namespace
+        run: |
+          if kubectl get namespace my-namespace > /dev/null 2>&1; then
+            echo "namespace_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "namespace_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create namespace (if not exists)
+        if: steps.check_namespace.outputs.namespace_exists == 'false'
+        run: |
+          kubectl create namespace my-namespace
+
+      - name: Bootstrap Flux into EKS Cluster
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          flux bootstrap github \
+            --owner=$FLUX_REPO_OWNER \
+            --repository=$FLUX_REPO_NAME \
+            --branch=$FLUX_REPO_BRANCH \
+            --path=$FLUX_MANIFEST_PATH \
+            --personal \
+            --token-auth
+
+      - name: Verify Flux Installation - List namespaces
+        run: kubectl get ns
