@@ -1,15 +1,7 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tls-secret-values
+tlsSecret:
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXFxuLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
+    tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5GQUtFX0tFWV9DT05URU5UXG4tLS0tLUU=
+  name: dremio-tls
   namespace: default
-data:
-  values.yaml: |
-    tlsSecret:
-      name: dremio-tls
-      namespace: default
-      data:
-        tls:
-          crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXFxuLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
-          key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5GQUtFX0tFWV9DT05URU5UXG4tLS0tLUU=
 
