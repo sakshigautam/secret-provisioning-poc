@@ -11,7 +11,7 @@ env:
   FLUX_REPO_OWNER: "sakshigautam"         # Replace with your GitHub org or username
   FLUX_REPO_NAME: "secret-provisioning-poc"           # Replace with your Flux Git repo name
   FLUX_REPO_BRANCH: main
-  FLUX_MANIFEST_PATH: ./clusters/dev # Path in repo for Flux manifests
+  FLUX_MANIFEST_PATH: ./clusters/staging # Path in repo for Flux manifests
 
 jobs:
   create-eks:
